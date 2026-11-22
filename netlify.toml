@@ -1,0 +1,6 @@
+# Static site: the whole app is the single self-contained HTML file `jogo`
+# (no extension). The build copies it to dist/index.html so Netlify serves it
+# at the site root with the correct text/html content type.
+[build]
+  command = "mkdir -p dist && cp jogo dist/index.html"
+  publish = "dist"
