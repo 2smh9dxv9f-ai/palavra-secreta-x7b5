@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="Mini Jogos: adivinhe a palavra secreta pelas pistas de direção e distância, e teste seus conhecimentos com perguntas e respostas."><meta name="theme-color" content="#0b1020"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🧭%3C/text%3E%3C/svg%3E">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mini Jogos</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:#151515;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{min-height:100vh;display:flex;justify-content:center;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.app{width:100%;max-width:520px;display:flex;flex-direction:column;min-height:100vh}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 6px;gap:8px}
+.logo{font-weight:800;font-size:18px;letter-spacing:-.3px;color:#f7a600}
+.coins{border:0;color:#fff;font:inherit;font-weight:700;background:#2a2a2a;border-radius:8px;padding:6px 12px 6px 8px;display:flex;align-items:center;gap:8px;font-weight:700}
+.plus{background:#f7a600;color:#111;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;line-height:1}
+.packs{display:grid;gap:8px;margin:12px 0}
+.pack{display:flex;justify-content:space-between;align-items:center;background:#2d2d2d;color:#fff;border:2px solid #3d3d3d;border-radius:10px;padding:12px 14px;font-size:17px;font-weight:700;cursor:pointer;margin:0}
+.pack.on{border-color:#f7a600;background:#3b3017}
+.pack span:last-child{color:#f7c600}
+.warn{background:#3b2a10;border-radius:8px;padding:10px;font-size:14px;color:#ffd27a;margin:8px 0}
+.coin{width:20px;height:20px;border-radius:50%;background:#f7c600;display:inline-block;border:2px solid #d9a400}
+.btn{background:#1c1c1c;color:#fff;border:2px solid #f7a600;border-bottom-width:4px;border-radius:8px;width:40px;height:40px;font-size:18px;font-weight:800;cursor:pointer}
+h1{text-align:center;font-size:32px;margin:14px 12px 4px;letter-spacing:-.5px}
+.tries{text-align:center;color:#ddd;margin:0 0 12px;font-size:16px}
+.cats{display:flex;gap:6px;overflow-x:auto;padding:0 12px 10px;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cat{flex:0 0 auto;background:#2a2a2a;color:#ccc;border:0;border-radius:999px;padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer}
+.cat.on{background:#f7a600;color:#111}
+.catbar{display:flex;gap:8px;padding:0 12px 12px}
+.catbtn{flex:1;background:#2a2a2a;color:#fff;border:2px solid #f7a600;border-bottom-width:4px;border-radius:10px;padding:11px 12px;font-size:16px;font-weight:600;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dice{background:#f7a600;border:0;border-bottom:4px solid #a97800;border-radius:10px;width:54px;font-size:22px;cursor:pointer}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.cgrid button{margin:0;background:#2d2d2d;color:#fff;border:2px solid #3d3d3d;border-radius:10px;padding:12px 8px;font-size:15px;font-weight:600}
+.cgrid button.on{border-color:#f7a600;background:#3b3017}
+.cgrid button.rnd{grid-column:1/-1;background:#f7a600;color:#111;border-color:#f7a600}
+.thead{display:flex;justify-content:space-between;background:#3a3a3a;padding:10px 14px;font-size:15px;color:#ddd}
+.thead b{color:#fff}
+.board{background:#383838;min-height:270px;padding:8px 10px;display:flex;flex-direction:column;gap:7px}
+.row{display:flex;height:44px;border-radius:7px;overflow:hidden;background:#454545;box-shadow:0 3px 0 #2c2c2c}
+.row .name{flex:1;padding:0 14px;display:flex;align-items:center;font-size:22px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .dist{width:128px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:21px;font-weight:700;color:#fff}
+.row .dist svg{width:22px;height:22px}
+.c1{background:#4a8500}.c2{background:#e6a800}.c3{background:#cc5200}.c4{background:#b3261e}
+.unk .dist{background:#d0d0d0;color:#222}
+.win .name{color:#9be15d}
+.ctrl{padding:12px 12px 6px}
+.note{color:#ddd;font-size:15px;margin:0 2px 8px}
+.pattern{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin:0 0 10px}
+.pl{min-width:22px;height:30px;border-bottom:3px solid #777;text-align:center;font-weight:800;font-size:20px;line-height:30px}
+.pl.sp{border-bottom:0;min-width:10px}
+.inrow{display:flex;gap:10px;position:relative}
+input{flex:1;min-width:0;background:#444;border:0;border-radius:8px;color:#fff;font-size:20px;padding:13px 12px;outline:none;caret-color:#f7a600}
+input:focus{box-shadow:0 0 0 2px #f7a600}
+.send{background:#e8a600;color:#111;border:0;border-bottom:4px solid #a97800;border-radius:8px;font-size:19px;font-weight:700;padding:0 26px;cursor:pointer}
+.send:disabled,.hint:disabled{opacity:.45}
+.sug{position:absolute;left:0;right:110px;bottom:100%;margin-bottom:6px;background:#2d2d2d;border-radius:8px;overflow:hidden;box-shadow:0 4px 16px #000a;z-index:5}
+.sug button{display:block;width:100%;text-align:left;background:none;border:0;color:#fff;font-size:19px;padding:11px 14px;border-bottom:1px solid #3c3c3c;cursor:pointer}
+.sug button:last-child{border-bottom:0}
+.sug button:active{background:#444}
+.actions{display:flex;gap:10px;margin-top:12px}
+.hint{flex:1;background:#1c1c1c;color:#fff;border:2px solid #f7a600;border-bottom-width:4px;border-radius:8px;font-size:17px;font-weight:600;padding:12px;cursor:pointer}
+.msg{margin:10px 12px 0;padding:14px;border-radius:10px;text-align:center;font-size:18px;font-weight:700;display:none}
+.msg.show{display:block}
+.msg.ok{background:#2c4a10;color:#c6f58f}
+.msg.no{background:#4a1d1a;color:#ffb3ab}
+.msg .again{display:block;margin:12px auto 0;background:#e8a600;color:#111;border:0;border-bottom:4px solid #a97800;border-radius:8px;font-size:17px;font-weight:700;padding:11px 24px;cursor:pointer}
+.modes{display:flex;gap:8px;padding:6px 12px 0}
+.mode{flex:1;background:#2a2a2a;color:#ccc;border:0;border-radius:10px;padding:11px 6px;font-size:14px;font-weight:700;cursor:pointer}
+.mode.on{background:#f7a600;color:#111}
+.qwrap{padding:0 14px}
+.qcats{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 18px;justify-content:center}
+.qcat{background:#2a2a2a;color:#ddd;border:2px solid #3a3a3a;border-radius:12px;padding:10px 14px;font-size:16px;font-weight:600;cursor:pointer}
+.qcat.on{border-color:#f7a600;background:#3b3017;color:#fff}
+.big{width:100%;padding:15px;font-size:19px;border-radius:10px}
+.qtop{display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-weight:700;color:#ddd}
+.qchip{background:#2a2a2a;border-radius:999px;padding:4px 12px;font-size:13px;color:#f7a600}
+.qbar{height:6px;background:#2f2f2f;border-radius:3px;margin:10px 0 16px;overflow:hidden}
+.qbar i{display:block;height:100%;background:#f7a600;width:0;transition:width .3s}
+#qText{font-size:24px;line-height:1.3;margin:0 0 16px;min-height:96px}
+.qopt{display:block;width:100%;text-align:left;background:#2d2d2d;color:#fff;border:2px solid #3d3d3d;border-bottom-width:4px;border-radius:10px;padding:14px;margin-bottom:10px;font-size:18px;font-weight:600;cursor:pointer}
+.qopt.ok{background:#2c4a10;border-color:#4a8500}
+.qopt.bad{background:#4a1d1a;border-color:#b3261e}
+.qopt:disabled{cursor:default}
+#qNext{margin-top:6px}
+.toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#fff;color:#111;padding:10px 16px;border-radius:8px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50}
+.toast.show{opacity:1}
+.modal{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;padding:20px;z-index:30}
+.modal.show{display:flex}
+.card{background:#242424;border-radius:14px;padding:20px;max-width:420px;line-height:1.5;font-size:16px}
+.card h2{margin:0 0 8px}
+.card .lg{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:6px}
+.card button{margin-top:12px;background:#e8a600;border:0;border-radius:8px;padding:10px 20px;font-weight:700;font-size:16px;cursor:pointer}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+<style id="theme">
+:root{--bg1:#0b1020;--bg2:#1a1038;--ink:#eef1ff;--mute:#9aa3c7;--glass:rgba(255,255,255,.07);--line:rgba(255,255,255,.12);--acc:#5eead4;--acc2:#a78bfa}
+html,body{font-family:"Outfit",system-ui,sans-serif;color:var(--ink);background:linear-gradient(160deg,var(--bg1),var(--bg2)) fixed}
+.logo{background:linear-gradient(90deg,#5eead4,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:22px;font-weight:800}
+.logo::before{content:"🧭 ";-webkit-text-fill-color:initial}
+.coins{background:var(--glass);border:1px solid var(--line);border-radius:999px;padding:5px 8px 5px 6px}
+.coin{background:radial-gradient(circle at 30% 30%,#fff3b0,#f5b301);border:0;box-shadow:0 0 10px #f5b30166}
+.plus{background:var(--acc);color:#0b1020}
+.btn{background:var(--glass);border:1px solid var(--line);border-radius:50%;color:var(--ink)}
+.modes{gap:6px;padding:8px 12px 2px}
+.mode{background:var(--glass);color:var(--mute);border:1px solid var(--line);border-radius:999px;font-family:inherit}
+.mode.on{background:linear-gradient(90deg,#5eead4,#a78bfa);color:#0b1020;border-color:transparent}
+h1{font-weight:800;font-size:30px;margin:12px 12px 2px}
+.tries{color:var(--mute);margin-bottom:10px;letter-spacing:.5px}
+.catbtn{background:var(--glass);border:1px solid var(--line);border-radius:14px;color:var(--ink);font-family:inherit}
+.dice{background:linear-gradient(135deg,#5eead4,#a78bfa);border:0;border-radius:14px}
+.thead{background:none;color:var(--mute);font-size:12px;text-transform:uppercase;letter-spacing:1.2px;padding:6px 18px}
+.thead b{color:var(--mute);font-weight:600}
+.board{background:none;padding:4px 12px;gap:10px;min-height:260px}
+.row{display:grid;grid-template-columns:1fr auto;height:auto;padding:12px 14px 10px;gap:8px 10px;border-radius:18px;background:var(--glass);border:1px solid var(--line);box-shadow:none;overflow:hidden;align-items:center}
+.row .name{padding:0;font-size:20px;font-weight:600;display:block}
+.row .dist{width:auto;background:var(--c,#555);color:#0b1020;border-radius:999px;padding:4px 12px;gap:6px;font-size:17px;font-weight:800}
+.row .dist .arr{font-size:18px}
+.meter{grid-column:1/-1;display:block;height:5px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden}
+.meter b{display:block;height:100%;border-radius:3px;background:var(--c)}
+.row.unk{background:none;border:1.5px dashed #6b74a3}
+.row.unk .name{color:var(--mute);font-style:italic;font-weight:400}
+.row.unk .dist{background:var(--glass);color:var(--ink)}
+.row.win{border-color:#34d399;background:rgba(52,211,153,.12)}
+.row.win .name{color:#a7f3d0}
+.note{color:var(--mute);font-size:13px}
+.pl{border-bottom:2px solid #6b74a3;border-radius:2px}
+input{background:var(--glass);border:1px solid var(--line);border-radius:14px;color:var(--ink);font-family:inherit;caret-color:var(--acc)}
+input:focus{box-shadow:0 0 0 2px var(--acc)}
+.send{background:linear-gradient(135deg,#5eead4,#a78bfa);color:#0b1020;border:0;border-radius:14px;font-family:inherit;font-weight:800}
+.hint{background:var(--glass);border:1px solid var(--acc);border-radius:14px;color:var(--ink);font-family:inherit}
+.msg.ok{background:rgba(52,211,153,.15);color:#a7f3d0;border:1px solid #34d399}
+.msg.no{background:rgba(255,107,107,.12);color:#ffc9c9;border:1px solid #ff6b6b}
+.msg .again{background:linear-gradient(135deg,#5eead4,#a78bfa);color:#0b1020;border:0;border-radius:14px;font-family:inherit}
+.toast{background:var(--ink);border-radius:999px}
+.card{background:#1a1d3a;border:1px solid var(--line);border-radius:20px}
+.card button{background:linear-gradient(135deg,#5eead4,#a78bfa);color:#0b1020;border-radius:14px;font-family:inherit}
+.c1{background:#ff6b6b}.c2{background:#ffa94d}.c3{background:#4dabf7}.c4{background:#5c6b8a}
+.pack,.qcat,.cgrid button,.qopt{background:var(--glass);border:1px solid var(--line);border-bottom-width:1px;border-radius:14px;color:var(--ink);font-family:inherit}
+.pack.on,.qcat.on,.cgrid button.on{border-color:var(--acc);background:rgba(94,234,212,.12)}
+.cgrid button.rnd{background:linear-gradient(135deg,#5eead4,#a78bfa);color:#0b1020;border:0}
+.qopt.ok{background:rgba(52,211,153,.18);border-color:#34d399}
+.qopt.bad{background:rgba(255,107,107,.18);border-color:#ff6b6b}
+.qbar{background:rgba(255,255,255,.1)}
+.qbar i{background:linear-gradient(90deg,#5eead4,#a78bfa)}
+.qchip{background:var(--glass);color:var(--acc)}
+.warn{background:rgba(245,179,1,.12);color:#fcd34d;border-radius:12px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">Mini Jogos</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="coins" title="Seus tokens"><span class="coin"></span><span id="coins">300</span></div>
+      <button class="btn" id="helpBtn" aria-label="Como jogar">?</button>
+    </div>
+  </header>
+  <div class="modes">
+    <button class="mode on" id="modeList">🔤 Adivinha na Lista</button>
+    <button class="mode" id="modeQuiz">❓ Perguntas e Respostas</button>
+  </div>
+  <div id="listView">
+  <h1 id="title">Marcas de Luxo</h1>
+  <p class="tries" id="tries">Tentativas: 0/8</p>
+  <div class="catbar"><button class="catbtn" id="catBtn">📂 Categoria: <b id="catName"></b> ▾</button><button class="dice" id="diceBtn" aria-label="Aleatório">🎲</button></div>
+  <div class="thead"><span><b>Seus palpites</b> · A–Z</span><span>Pista</span></div>
+  <div class="board" id="board"></div>
+  <div class="ctrl">
+    <div class="pattern" id="pattern"></div>
+    <p class="note">Os palpites ficam em ordem A–Z</p>
+    <div class="inrow">
+      <div class="sug" id="sug" style="display:none"></div>
+      <input id="inp" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Digite um palpite">
+      <button class="send" id="send">Enviar</button>
+    </div>
+    <div class="actions">
+      <button class="hint" id="hint">Revelar Letra (−25 tokens)</button>
+    </div>
+  </div>
+  <div class="msg" id="msg"></div>
+  </div>
+  <div id="quizView" style="display:none">
+    <div id="qSetup" class="qwrap">
+      <h1>Perguntas e Respostas</h1>
+      <p class="note" style="text-align:center">Escolha uma ou mais categorias, ou deixe aleatório.</p>
+      <div class="qcats" id="qCats"></div>
+      <button class="send big" id="qStart">🎲 Começar (10 perguntas)</button>
+    </div>
+    <div id="qPlay" class="qwrap" style="display:none">
+      <div class="qtop"><span id="qProg">1/10</span><span id="qCat" class="qchip"></span><span id="qScore">0 pts</span></div>
+      <div class="qbar"><i id="qBar"></i></div>
+      <h2 id="qText"></h2>
+      <div id="qOpts"></div>
+      <button class="send big" id="qNext" style="display:none">Próxima</button>
+    </div>
+    <div id="qEnd" class="qwrap" style="display:none">
+      <h1 id="qEndT"></h1>
+      <p class="note" id="qEndS" style="text-align:center;font-size:18px"></p>
+      <button class="send big" id="qAgain">Jogar de novo</button>
+      <button class="hint big" id="qMenu" style="margin-top:10px;width:100%">Trocar categorias</button>
+    </div>
+  </div>
+  <div style="height:30px"></div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="modal" id="catModal"><div class="card" style="width:100%;max-height:85vh;overflow:auto">
+  <h2>Escolha a categoria</h2>
+  <div class="cgrid" id="catGrid"></div>
+  <button id="closeCat">Fechar</button>
+</div></div>
+<div class="modal" id="modal"><div class="card">
+  <h2>Como jogar</h2>
+  <p>Existe uma palavra secreta dentro de uma lista. Dê um palpite e o jogo mostra <b>em que direção</b> da lista alfabética ela está (seta) e <b>quantas posições</b> faltam até ela (número).</p>
+  <p>Seta para baixo ↓ = a resposta vem <b>depois</b> do seu palpite na ordem alfabética. Seta para cima ↑ = vem <b>antes</b>. O “?” mostra o lugar onde a resposta se encaixa entre seus palpites.</p>
+  <p><span class="lg c1"></span>🔥 quente &nbsp;<span class="lg c2"></span>morno &nbsp;<span class="lg c3"></span>frio &nbsp;<span class="lg c4"></span>🧊 gelado</p>
+  <p>Você tem 8 tentativas. “Revelar Letra” custa 25 tokens. Você ganha 10 tokens a cada rodada que acertar.</p>
+  <button id="closeModal">Entendi</button>
+</div></div>
+
+<script>
+const LISTS = {
+  "Marcas de Luxo": ["Acqua di Parma","Alexander McQueen","Armani","Aston Martin","Audemars Piguet","Balenciaga","Balmain","Bentley","Berluti","Bottega Veneta","Breitling","Brunello Cucinelli","Bugatti","Bulgari","Burberry","Canada Goose","Carolina Herrera","Cartier","Celine","Chanel","Chloé","Chopard","Christian Louboutin","Coach","Dior","Dolce & Gabbana","Dom Pérignon","Dunhill","Emilio Pucci","Ermenegildo Zegna","Fendi","Ferrari","Givenchy","Goyard","Graff","Gucci","Harry Winston","Hennessy","Hermès","Hublot","Hugo Boss","Jaeger-LeCoultre","Jimmy Choo","Kenzo","Lamborghini","Lanvin","Loewe","Longchamp","Louis Vuitton","Marc Jacobs","Maserati","Max Mara","McLaren","Mercedes-Benz","Michael Kors","Miu Miu","Moët & Chandon","Moncler","Montblanc","Off-White","Omega","Oscar de la Renta","Paco Rabanne","Panerai","Patek Philippe","Piaget","Porsche","Prada","Ralph Lauren","Richard Mille","Roger Vivier","Rolex","Rolls-Royce","Saint Laurent","Salvatore Ferragamo","Stella McCartney","Swarovski","TAG Heuer","Tiffany & Co.","Tod's","Tom Ford","Tory Burch","Trussardi","Vacheron Constantin","Valentino","Van Cleef & Arpels","Versace","Vivienne Westwood","Zenith"],
+  "Países": ["Afeganistão","África do Sul","Albânia","Alemanha","Angola","Arábia Saudita","Argentina","Argélia","Armênia","Austrália","Áustria","Bahamas","Bangladesh","Bélgica","Bolívia","Bósnia e Herzegovina","Brasil","Bulgária","Camarões","Camboja","Canadá","Catar","Cazaquistão","Chile","China","Chipre","Colômbia","Coreia do Norte","Coreia do Sul","Costa Rica","Costa do Marfim","Croácia","Cuba","Dinamarca","Egito","Emirados Árabes Unidos","Equador","Eslováquia","Eslovênia","Espanha","Estados Unidos","Estônia","Etiópia","Filipinas","Finlândia","França","Gana","Geórgia","Grécia","Guatemala","Haiti","Holanda","Honduras","Hungria","Índia","Indonésia","Irã","Iraque","Irlanda","Islândia","Israel","Itália","Jamaica","Japão","Jordânia","Quênia","Kuwait","Letônia","Líbano","Líbia","Lituânia","Luxemburgo","Madagascar","Malásia","Marrocos","México","Moçambique","Mongólia","Nepal","Nicarágua","Nigéria","Noruega","Nova Zelândia","Panamá","Paquistão","Paraguai","Peru","Polônia","Portugal","Reino Unido","República Tcheca","Romênia","Rússia","Senegal","Sérvia","Singapura","Síria","Sri Lanka","Suécia","Suíça","Tailândia","Tanzânia","Tunísia","Turquia","Ucrânia","Uganda","Uruguai","Uzbequistão","Venezuela","Vietnã","Zâmbia","Zimbábue"],
+  "Animais": ["Abelha","Águia","Alce","Anta","Arara","Aranha","Avestruz","Baleia","Barata","Bem-te-vi","Besouro","Bicho-preguiça","Boto","Búfalo","Burro","Cabra","Cachorro","Camaleão","Camelo","Canguru","Capivara","Caranguejo","Carneiro","Castor","Cavalo","Cegonha","Cervo","Cisne","Cobra","Coelho","Coruja","Crocodilo","Elefante","Ema","Escorpião","Esquilo","Flamingo","Foca","Formiga","Gafanhoto","Gaivota","Galinha","Gambá","Gato","Gavião","Girafa","Golfinho","Gorila","Guaxinim","Hipopótamo","Hiena","Iguana","Jacaré","Jaguar","Javali","Joaninha","Lagarto","Leão","Lebre","Lhama","Lobo","Lontra","Macaco","Mamute","Mico-leão","Morcego","Mosquito","Onça-pintada","Ornitorrinco","Ovelha","Panda","Pantera","Papagaio","Pato","Pavão","Pelicano","Pinguim","Polvo","Porco","Pombo","Quati","Raposa","Rato","Rinoceronte","Sapo","Seriema","Tamanduá","Tartaruga","Tatu","Tigre","Tubarão","Tucano","Urso","Urubu","Vaca","Veado","Zebra"],
+  "Times de Futebol": ["Athletico Paranaense","Atlético Goianiense","Atlético Mineiro","Avaí","Bahia","Botafogo","Bragantino","Ceará","Chapecoense","Corinthians","Coritiba","Criciúma","Cruzeiro","CSA","Cuiabá","Figueirense","Flamengo","Fluminense","Fortaleza","Goiás","Grêmio","Guarani","Internacional","Ituano","Juventude","Mirassol","Náutico","Operário","Palmeiras","Paysandu","Ponte Preta","Remo","Santa Cruz","Santos","São Paulo","Sport","Vasco da Gama","Vila Nova","Vitória","América Mineiro","Londrina","Brusque","Novorizontino","Sampaio Corrêa"],
+  "Frutas": ["Abacate","Abacaxi","Acerola","Açaí","Ameixa","Amora","Banana","Cajá","Caju","Caqui","Carambola","Cereja","Coco","Cupuaçu","Damasco","Figo","Framboesa","Fruta-do-conde","Goiaba","Graviola","Groselha","Jabuticaba","Jaca","Kiwi","Laranja","Lichia","Limão","Maçã","Mamão","Manga","Maracujá","Melancia","Melão","Mexerica","Mirtilo","Morango","Nectarina","Pera","Pêssego","Pitaya","Pitanga","Romã","Seriguela","Tamarindo","Tangerina","Umbu","Uva"],
+  "Comidas Brasileiras": ["Acarajé","Arroz com feijão","Baião de dois","Beijinho","Beiju","Bobó de camarão","Bolinho de chuva","Bolo de fubá","Bolo de rolo","Brigadeiro","Caldo de cana","Canjica","Carne de sol","Churrasco","Cocada","Coxinha","Cuscuz","Empadão","Escondidinho","Estrogonofe","Farofa","Feijoada","Frango com quiabo","Galinhada","Mandioca frita","Moqueca","Paçoca","Pamonha","Pão de queijo","Pastel","Pé de moleque","Picanha","Pirão","Pudim","Quibebe","Quindim","Rabada","Risoles","Romeu e Julieta","Sarapatel","Tacacá","Tapioca","Tutu de feijão","Vatapá","Virado à paulista"],
+  "Cidades do Brasil": ["Aracaju","Bauru","Belém","Belo Horizonte","Blumenau","Boa Vista","Brasília","Campina Grande","Campinas","Campo Grande","Caruaru","Cuiabá","Curitiba","Feira de Santana","Florianópolis","Fortaleza","Foz do Iguaçu","Goiânia","Governador Valadares","Gramado","Ipatinga","Joinville","João Pessoa","Juiz de Fora","Londrina","Macapá","Maceió","Manaus","Maringá","Montes Claros","Natal","Niterói","Olinda","Ouro Preto","Palmas","Paraty","Pelotas","Petrolina","Petrópolis","Porto Alegre","Porto Velho","Recife","Ribeirão Preto","Rio Branco","Rio de Janeiro","Salvador","Santarém","Santos","Sobral","Sorocaba","São Luís","São Paulo","Teresina","Uberlândia","Vitória","Vitória da Conquista"],
+  "Marcas de Carros": ["Alfa Romeo","Aston Martin","Audi","Bentley","BMW","Bugatti","BYD","Cadillac","Chery","Chevrolet","Chrysler","Citroën","Dacia","Dodge","Ferrari","Fiat","Ford","GWM","Honda","Hyundai","Infiniti","Jaguar","Jeep","Kia","Lamborghini","Land Rover","Lexus","Lotus","Maserati","Mazda","McLaren","Mercedes-Benz","Mini","Mitsubishi","Nissan","Opel","Pagani","Peugeot","Porsche","Ram","Renault","Rolls-Royce","Seat","Skoda","Smart","Subaru","Suzuki","Tesla","Toyota","Troller","Volkswagen","Volvo"],
+  "Marcas de Tecnologia": ["Acer","Adobe","Amazon","AMD","Anthropic","Apple","Asus","Canon","Cisco","Corsair","Dell","Dropbox","Epson","Google","HP","Huawei","HyperX","IBM","Intel","JBL","Kingston","Lenovo","LG","Logitech","Meta","Microsoft","Motorola","Netflix","Nintendo","Nokia","Nvidia","OnePlus","Oppo","Oracle","Panasonic","Philips","Positivo","Qualcomm","Razer","Realme","Samsung","SanDisk","Slack","Sony","Spotify","Uber","Vivo","Xiaomi","Zoom"],
+  "Jogos de Videogame": ["Among Us","Animal Crossing","Assassin's Creed","Battlefield","Bloodborne","Call of Duty","Candy Crush","Clash Royale","Counter-Strike","Cyberpunk 2077","Dark Souls","Diablo","Doom","Dota 2","Elden Ring","Fall Guys","FIFA","Fortnite","Free Fire","God of War","GTA V","Hades","Halo","Hollow Knight","Horizon","League of Legends","Minecraft","Mortal Kombat","Mario Kart","Overwatch","Pac-Man","Persona 5","Pokémon","Red Dead Redemption","Resident Evil","Roblox","Rocket League","Sekiro","Skyrim","Sonic","Stardew Valley","Street Fighter","Subway Surfers","Super Mario","Tekken","Terraria","Tetris","The Last of Us","The Legend of Zelda","The Witcher 3","Uncharted","Valorant"],
+  "Profissões": ["Açougueiro","Advogado","Agricultor","Arquiteto","Astronauta","Atleta","Ator","Barbeiro","Bibliotecário","Bombeiro","Cabeleireiro","Cantor","Carpinteiro","Chef","Cientista","Contador","Cozinheiro","Dentista","Designer","Eletricista","Enfermeiro","Engenheiro","Escritor","Farmacêutico","Fotógrafo","Garçom","Gari","Jardineiro","Jornalista","Juiz","Marceneiro","Mecânico","Médico","Motorista","Músico","Padeiro","Pedreiro","Pescador","Piloto","Pintor","Policial","Professor","Programador","Psicólogo","Sapateiro","Soldado","Taxista","Tradutor","Vendedor","Veterinário","Zelador"],
+  "Esportes": ["Atletismo","Automobilismo","Badminton","Basquete","Beisebol","Bocha","Boxe","Canoagem","Capoeira","Ciclismo","Corrida","Críquete","Escalada","Esgrima","Esqui","Futebol","Futevôlei","Futsal","Ginástica","Golfe","Halterofilismo","Handebol","Hóquei","Jiu-jitsu","Judô","Karatê","Luta livre","Maratona","Mergulho","MMA","Muay thai","Natação","Patinação","Pentatlo","Polo aquático","Remo","Rúgbi","Salto com vara","Skate","Surfe","Taekwondo","Tênis","Tênis de mesa","Tiro com arco","Triatlo","Vôlei","Vôlei de praia","Xadrez"],
+  "Instrumentos Musicais": ["Acordeão","Afoxé","Agogô","Atabaque","Baixo","Bandolim","Banjo","Bateria","Berimbau","Bongô","Cajón","Castanholas","Cavaquinho","Clarinete","Contrabaixo","Cuíca","Didgeridoo","Fagote","Flauta","Flauta doce","Gaita","Gongo","Guitarra","Harpa","Maracas","Oboé","Órgão","Pandeiro","Piano","Pífano","Reco-reco","Sanfona","Saxofone","Sitar","Surdo","Tambor","Teclado","Theremin","Triângulo","Trombone","Trompete","Tuba","Ukulele","Viola","Violão","Violino","Violoncelo","Xilofone","Zabumba"],
+  "Times da Europa": ["Ajax","Arsenal","Aston Villa","Athletic Bilbao","Atalanta","Atlético de Madrid","Barcelona","Bayer Leverkusen","Bayern de Munique","Benfica","Borussia Dortmund","Brighton","Celtic","Chelsea","Everton","Fenerbahçe","Feyenoord","Fiorentina","Galatasaray","Inter de Milão","Juventus","Lazio","Leeds","Lille","Liverpool","Lyon","Manchester City","Manchester United","Marseille","Milan","Monaco","Napoli","Newcastle","Olympiacos","Paris Saint-Germain","Porto","PSV","Rangers","RB Leipzig","Real Madrid","Real Sociedad","Roma","Sevilla","Shakhtar","Sporting","Tottenham","Valencia","Villarreal","West Ham","Wolfsburg"],
+  "Cantores Brasileiros": ["Alceu Valença","Alexandre Pires","Anitta","Baco Exu do Blues","Belchior","Caetano Veloso","Cazuza","Chico Buarque","Criolo","Daniel","Djavan","Elba Ramalho","Elis Regina","Emicida","Fábio Jr.","Fagner","Gal Costa","Gilberto Gil","Gusttavo Lima","Henrique e Juliano","Ivete Sangalo","Jorge Ben Jor","Jorge e Mateus","Leonardo","Léo Santana","Liniker","Lulu Santos","Luan Santana","Ludmilla","Maiara e Maraisa","Maria Bethânia","Marília Mendonça","Marisa Monte","Milton Nascimento","Mumuzinho","Ney Matogrosso","Pabllo Vittar","Péricles","Projota","Raul Seixas","Rita Lee","Roberto Carlos","Seu Jorge","Silva","Simone","Thiaguinho","Tim Maia","Tom Jobim","Vanessa da Mata","Wesley Safadão","Zeca Pagodinho"]
+};
+const MAX = 8, HINT_COST = 25;
+const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]/g,"");
+const $ = id => document.getElementById(id);
+
+const PACKS = [100,300,500,1000];
+const PRICE_PER_100 = 5; // R$ 5,00 a cada 100 tokens
+const brl = v => "R$ " + v.toFixed(2).replace(".",",");
+try { const t = parseInt(localStorage.getItem("tokens")); if (!isNaN(t) && t >= 0) var savedTokens = t; } catch(e){}
+function saveTokens(){ try { localStorage.setItem("tokens", String(coins)); } catch(e){} }
+let randomMode = false, cat = "Marcas de Luxo", list = [], ansIdx = 0, guesses = [], coins = (typeof savedTokens === 'number' ? savedTokens : 300), done = false, revealed = new Set();
+
+function sortedList(name){
+  return LISTS[name].slice().sort((a,b)=>norm(a).localeCompare(norm(b),"pt-BR"));
+}
+function newGame(){
+  if (randomMode){ const ks = Object.keys(LISTS); cat = ks[Math.floor(Math.random()*ks.length)]; }
+  list = sortedList(cat);
+  ansIdx = Math.floor(Math.random()*list.length);
+  guesses = []; done = false; revealed = new Set();
+  $("title").textContent = cat;
+  $("msg").className = "msg"; $("msg").innerHTML = "";
+  $("inp").value = ""; $("inp").disabled = false; $("send").disabled = false; $("hint").disabled = false;
+  render();
+}
+function colorClass(d){
+  const r = d / list.length;
+  if (r <= .04) return "c1";
+  if (r <= .15) return "c2";
+  if (r <= .30) return "c3";
+  return "c4";
+}
+const UP = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15l7-7 7 7"/></svg>';
+const DOWN = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l7 7 7-7"/></svg>';
+
+function render(){
+  $("coins").textContent = coins;
+  $("tries").textContent = "Tentativas: " + guesses.length + "/" + MAX;
+  $("catName").textContent = cat + (randomMode ? " (aleatório)" : "");
+  // board: guesses sorted alphabetically with "?" slot
+  const items = guesses.map(i=>({i, g:true}));
+  if (!done) items.push({i:ansIdx, g:false});
+  items.sort((a,b)=>a.i-b.i);
+  const COL = {c1:"#ff6b6b",c2:"#ffa94d",c3:"#4dabf7",c4:"#5c6b8a"};
+  $("board").innerHTML = items.map(it=>{
+    if (!it.g) return '<div class="row unk"><div class="name">a resposta fica aqui</div><div class="dist">?</div></div>';
+    const d = Math.abs(it.i - ansIdx);
+    if (d === 0) return '<div class="row win" style="--c:#34d399"><div class="name">'+esc(list[it.i])+'</div><div class="dist"><span class="arr">✓</span></div><i class="meter"><b style="width:100%"></b></i></div>';
+    const arrow = ansIdx > it.i ? "↓" : "↑";
+    const pct = Math.max(4, Math.round((1 - d/list.length)*100));
+    return '<div class="row" style="--c:'+COL[colorClass(d)]+'"><div class="name">'+esc(list[it.i])+'</div><div class="dist"><span class="arr">'+arrow+'</span><span>'+d+'</span></div><i class="meter"><b style="width:'+pct+'%"></b></i></div>';
+  }).join("");
+  // pattern
+  const ans = list[ansIdx];
+  $("pattern").innerHTML = [...ans].map((ch,k)=>{
+    if (ch === " ") return '<span class="pl sp"></span>';
+    const show = done || revealed.has(k) || !/[\p{L}\p{N}]/u.test(ch);
+    return '<span class="pl">'+(show?esc(ch.toUpperCase()):"")+'</span>';
+  }).join("");
+  updateSug();
+}
+function esc(s){ return s.replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function toast(t){ const el=$("toast"); el.textContent=t; el.classList.add("show"); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove("show"),2200); }
+
+function updateSug(){}
+function submit(forceIdx){
+  if (done) return;
+  let idx = forceIdx;
+  if (idx === undefined){
+    const q = norm($("inp").value);
+    if (!q) return;
+    idx = list.findIndex(n=>norm(n)===q);
+    if (idx < 0){ toast("Palavra não encontrada no jogo"); return; }
+  }
+  if (guesses.includes(idx)){ toast("Você já tentou esse"); return; }
+  guesses.push(idx);
+  $("inp").value = "";
+  if (idx === ansIdx) finish(true);
+  else if (guesses.length >= MAX) finish(false);
+  render();
+}
+function finish(win){
+  done = true;
+  if (win){ coins += 10; saveTokens(); }
+  $("inp").disabled = true; $("send").disabled = true; $("hint").disabled = true;
+  const m = $("msg");
+  m.className = "msg show " + (win?"ok":"no");
+  m.innerHTML = (win ? "🎉 Acertou em " + guesses.length + (guesses.length===1?" tentativa!":" tentativas!") + " +10 tokens" : "A resposta era: " + esc(list[ansIdx])) +
+    '<button class="again" id="again">Jogar de novo</button>';
+  $("again").onclick = newGame;
+}
+$("send").onclick = ()=>submit();
+$("inp").addEventListener("input", updateSug);
+$("inp").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); submit(); } });
+$("hint").onclick = ()=>{
+  if (done) return;
+  if (coins < HINT_COST){ toast("Tokens acabaram! Ganhe mais acertando rodadas"); return; }
+  const ans = list[ansIdx];
+  const hidden = [...ans].map((ch,k)=>k).filter(k=>/[\p{L}\p{N}]/u.test(ans[k]) && !revealed.has(k));
+  if (!hidden.length){ toast("Tudo revelado"); return; }
+  revealed.add(hidden[Math.floor(Math.random()*hidden.length)]);
+  coins -= HINT_COST; saveTokens(); render();
+};
+$("helpBtn").onclick = ()=>$("modal").classList.add("show");
+$("closeModal").onclick = ()=>$("modal").classList.remove("show");
+function buildPicker(){
+  const g = $("catGrid"); g.innerHTML = "";
+  const r = document.createElement("button");
+  r.className = "rnd"; r.textContent = "🎲 Aleatório (todas as categorias)";
+  r.onclick = ()=>{ randomMode = true; $("catModal").classList.remove("show"); newGame(); };
+  g.appendChild(r);
+  Object.keys(LISTS).forEach(n=>{
+    const b = document.createElement("button");
+    b.className = (!randomMode && n===cat) ? "on" : "";
+    b.textContent = n + " (" + LISTS[n].length + ")";
+    b.onclick = ()=>{ randomMode = false; cat = n; $("catModal").classList.remove("show"); newGame(); };
+    g.appendChild(b);
+  });
+}
+$("catBtn").onclick = ()=>{ buildPicker(); $("catModal").classList.add("show"); };
+$("closeCat").onclick = ()=>$("catModal").classList.remove("show");
+$("diceBtn").onclick = ()=>{ randomMode = true; newGame(); };
+newGame();
+
+/* ===== Perguntas e Respostas ===== */
+// [pergunta, correta, errada1, errada2, errada3]
+const QUIZ = {
+  "🌍 Geografia": [
+    ["Qual é a capital da Austrália?","Camberra","Sydney","Melbourne","Perth"],
+    ["Qual é o maior rio do mundo em volume de água?","Amazonas","Nilo","Mississippi","Yangtzé"],
+    ["Qual é o menor país do mundo?","Vaticano","Mônaco","San Marino","Malta"],
+    ["Em qual continente fica o Egito?","África","Ásia","Europa","Oceania"],
+    ["Qual é o maior deserto quente do mundo?","Saara","Gobi","Atacama","Kalahari"],
+    ["Qual é a capital do Canadá?","Ottawa","Toronto","Vancouver","Montreal"],
+    ["Qual é a montanha mais alta do mundo?","Everest","K2","Kilimanjaro","Aconcágua"],
+    ["Qual é a capital da Argentina?","Buenos Aires","Córdoba","Rosário","Montevidéu"]
+  ],
+  "🔬 Ciência": [
+    ["Qual planeta é o mais próximo do Sol?","Mercúrio","Vênus","Marte","Terra"],
+    ["Qual é o símbolo químico do ouro?","Au","Ag","Fe","Go"],
+    ["Quantos ossos tem o corpo de um adulto?","206","186","226","256"],
+    ["Qual gás as plantas absorvem na fotossíntese?","Gás carbônico","Oxigênio","Nitrogênio","Hidrogênio"],
+    ["Qual é o maior órgão do corpo humano?","Pele","Fígado","Pulmão","Intestino"],
+    ["Qual planeta é conhecido como “planeta vermelho”?","Marte","Júpiter","Vênus","Saturno"],
+    ["Qual é a fórmula química da água?","H2O","CO2","O2","NaCl"],
+    ["Aproximadamente, qual é a velocidade da luz no vácuo?","300.000 km/s","150.000 km/s","30.000 km/s","3.000.000 km/s"]
+  ],
+  "📜 História": [
+    ["Em que ano o Brasil declarou independência?","1822","1808","1889","1500"],
+    ["Quem comandou a frota que chegou ao Brasil em 1500?","Pedro Álvares Cabral","Vasco da Gama","Cristóvão Colombo","Dom Pedro I"],
+    ["Em que ano foi proclamada a República no Brasil?","1889","1822","1930","1964"],
+    ["Em que ano terminou a Segunda Guerra Mundial?","1945","1939","1918","1950"],
+    ["Quem foi o primeiro presidente do Brasil?","Deodoro da Fonseca","Floriano Peixoto","Dom Pedro II","Juscelino Kubitschek"],
+    ["Em que ano caiu o Muro de Berlim?","1989","1979","1991","1961"],
+    ["Qual civilização construiu as pirâmides de Gizé?","Egípcia","Maia","Romana","Grega"],
+    ["Em que ano Brasília foi inaugurada?","1960","1950","1964","1956"]
+  ],
+  "⚽ Futebol": [
+    ["Quantas Copas do Mundo a seleção brasileira masculina venceu?","5","4","6","3"],
+    ["Quantas Copas do Mundo Pelé conquistou?","3","2","4","1"],
+    ["Quantos jogadores de cada time ficam em campo no futebol?","11","10","9","12"],
+    ["Quem foi campeã da Copa do Mundo de 2022?","Argentina","França","Croácia","Brasil"],
+    ["Onde foi realizada a Copa do Mundo de 2002?","Coreia do Sul e Japão","Alemanha","Estados Unidos","França"],
+    ["Qual é o maior artilheiro da história das Copas do Mundo?","Miroslav Klose","Ronaldo","Pelé","Gerd Müller"],
+    ["Qual estádio recebeu as finais das Copas de 1950 e 2014?","Maracanã","Morumbi","Mineirão","Pacaembu"],
+    ["Qual país sediou a Copa do Mundo de 2014?","Brasil","África do Sul","Rússia","Alemanha"]
+  ],
+  "🇧🇷 Brasil e Folclore": [
+    ["Qual personagem do folclore protege as florestas e tem os pés virados para trás?","Curupira","Saci","Boitatá","Iara"],
+    ["Quantas pernas tem o Saci-Pererê?","Uma","Duas","Três","Nenhuma"],
+    ["Qual é o maior bioma do Brasil?","Amazônia","Cerrado","Mata Atlântica","Caatinga"],
+    ["O Boitatá é conhecido como uma…","Cobra de fogo","Mula sem cabeça","Sereia","Onça gigante"],
+    ["Qual é a capital de Minas Gerais?","Belo Horizonte","Uberlândia","Juiz de Fora","Governador Valadares"],
+    ["Quem é conhecida como a “mãe-d’água” do folclore brasileiro?","Iara","Cuca","Caipora","Mapinguari"],
+    ["Qual movimento do Nordeste teve Lampião como líder mais famoso?","Cangaço","Tropicalismo","Bandeirantismo","Inconfidência"],
+    ["Qual é o maior estado do Brasil em área?","Amazonas","Pará","Minas Gerais","Mato Grosso"]
+  ],
+  "💻 Tecnologia e Games": [
+    ["Quem criou o sistema operacional Linux?","Linus Torvalds","Bill Gates","Steve Jobs","Dennis Ritchie"],
+    ["O que significa a sigla HTML?","HyperText Markup Language","High Tech Modern Language","Home Tool Markup Language","HyperTransfer Machine Logic"],
+    ["Qual empresa criou o jogo Minecraft?","Mojang","Valve","Epic Games","Roblox Corp."],
+    ["Em qual cidade fictícia se passa o GTA VI?","Vice City","Los Santos","Liberty City","San Fierro"],
+    ["Qual linguagem de programação roda nativamente nos navegadores?","JavaScript","Python","C++","Java"],
+    ["Quantos bits tem um byte?","8","4","16","10"],
+    ["O que significa a sigla CPU?","Unidade Central de Processamento","Controle Principal de Usuário","Computador Pessoal Universal","Placa de Processamento Única"],
+    ["Qual empresa é dona do TikTok?","ByteDance","Meta","Google","Tencent"]
+  ],
+  "🎨 Cultura Geral": [
+    ["Quantas cores tem o arco-íris?","7","5","6","8"],
+    ["Quem pintou a Mona Lisa?","Leonardo da Vinci","Michelangelo","Van Gogh","Picasso"],
+    ["Quem escreveu “Dom Casmurro”?","Machado de Assis","José de Alencar","Monteiro Lobato","Graciliano Ramos"],
+    ["Qual instrumento musical tem 88 teclas?","Piano","Violão","Acordeão","Flauta"],
+    ["Qual é a moeda do Japão?","Iene","Won","Yuan","Rupia"],
+    ["Quantos lados tem um hexágono?","6","5","7","8"],
+    ["Qual é o maior animal terrestre?","Elefante-africano","Girafa","Rinoceronte","Hipopótamo"],
+    ["Quem é conhecido como o “Rei do Pop”?","Michael Jackson","Elvis Presley","Prince","Justin Timberlake"]
+  ]
+};
+const QN = 10;
+let qSel = new Set(), qList = [], qI = 0, qScore = 0, qAnswered = false;
+const shuffle = a => { a = a.slice(); for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+
+function qRenderCats(){
+  const box = $("qCats"); box.innerHTML = "";
+  const rnd = document.createElement("button");
+  rnd.className = "qcat" + (qSel.size===0 ? " on" : "");
+  rnd.textContent = "🎲 Aleatório (todas)";
+  rnd.onclick = ()=>{ qSel.clear(); qRenderCats(); };
+  box.appendChild(rnd);
+  Object.keys(QUIZ).forEach(n=>{
+    const b = document.createElement("button");
+    b.className = "qcat" + (qSel.has(n) ? " on" : "");
+    b.textContent = n;
+    b.onclick = ()=>{ qSel.has(n) ? qSel.delete(n) : qSel.add(n); qRenderCats(); };
+    box.appendChild(b);
+  });
+}
+function qShow(id){ ["qSetup","qPlay","qEnd"].forEach(x=>$(x).style.display = x===id ? "block" : "none"); }
+function qStart(){
+  const cats = qSel.size ? [...qSel] : Object.keys(QUIZ);
+  const pool = [];
+  cats.forEach(c => QUIZ[c].forEach(q => pool.push({cat:c, q:q[0], a:q[1], opts:q.slice(1)})));
+  qList = shuffle(pool).slice(0, QN);
+  qI = 0; qScore = 0;
+  qShow("qPlay"); qRenderQ();
+}
+function qRenderQ(){
+  const it = qList[qI]; qAnswered = false;
+  $("qProg").textContent = (qI+1) + "/" + qList.length;
+  $("qCat").textContent = it.cat;
+  $("qScore").textContent = qScore + " pts";
+  $("qBar").style.width = (qI/qList.length*100) + "%";
+  $("qText").textContent = it.q;
+  $("qNext").style.display = "none";
+  const box = $("qOpts"); box.innerHTML = "";
+  shuffle(it.opts).forEach(o=>{
+    const b = document.createElement("button");
+    b.className = "qopt"; b.textContent = o;
+    b.onclick = ()=>qAnswer(b, o);
+    box.appendChild(b);
+  });
+}
+function qAnswer(btn, o){
+  if (qAnswered) return; qAnswered = true;
+  const it = qList[qI], right = o === it.a;
+  if (right) qScore++;
+  [...$("qOpts").children].forEach(b=>{
+    b.disabled = true;
+    if (b.textContent === it.a) b.classList.add("ok");
+    else if (b === btn) b.classList.add("bad");
+  });
+  $("qScore").textContent = qScore + " pts";
+  $("qBar").style.width = ((qI+1)/qList.length*100) + "%";
+  $("qNext").textContent = qI === qList.length-1 ? "Ver resultado" : "Próxima";
+  $("qNext").style.display = "block";
+}
+function qNext(){
+  if (qI < qList.length-1){ qI++; qRenderQ(); return; }
+  const pct = qScore / qList.length;
+  $("qEndT").textContent = qScore + " de " + qList.length + " acertos";
+  $("qEndS").textContent = pct===1 ? "🏆 Perfeito!" : pct>=.7 ? "👏 Mandou muito bem!" : pct>=.4 ? "🙂 Dá pra melhorar!" : "😅 Tente de novo!";
+  qShow("qEnd");
+}
+$("qStart").onclick = qStart;
+$("qNext").onclick = qNext;
+$("qAgain").onclick = qStart;
+$("qMenu").onclick = ()=>{ qRenderCats(); qShow("qSetup"); };
+function setMode(m){
+  $("listView").style.display = m==="list" ? "block" : "none";
+  $("quizView").style.display = m==="quiz" ? "block" : "none";
+  $("modeList").classList.toggle("on", m==="list");
+  $("modeQuiz").classList.toggle("on", m==="quiz");
+}
+$("modeList").onclick = ()=>setMode("list");
+$("modeQuiz").onclick = ()=>{ setMode("quiz"); };
+qRenderCats();
+</script>
+</body>
+</html>
