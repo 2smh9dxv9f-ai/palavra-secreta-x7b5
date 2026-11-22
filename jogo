@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="description" content="Mini Jogos: adivinhe a palavra secreta pelas pistas de direção e distância, e teste seus conhecimentos com perguntas e respostas."><meta name="theme-color" content="#0b1020"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🧭%3C/text%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mini Jogos</title>
 <style>
@@ -12,6 +13,7 @@ body{min-height:100vh;display:flex;justify-content:center;padding:env(safe-area-
 .app{width:100%;max-width:520px;display:flex;flex-direction:column;min-height:100vh}
 header{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 6px;gap:8px}
 .logo{font-weight:800;font-size:18px;letter-spacing:-.3px;color:#f7a600}
+.loginbtn{background:var(--glass,#2a2a2a);color:#eef1ff;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:8px 14px;font:inherit;font-weight:700;font-size:14px;cursor:pointer;max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .coins{border:0;color:#fff;font:inherit;font-weight:700;background:#2a2a2a;border-radius:8px;padding:6px 12px 6px 8px;display:flex;align-items:center;gap:8px;font-weight:700}
 .plus{background:#f7a600;color:#111;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;line-height:1}
 .packs{display:grid;gap:8px;margin:12px 0}
@@ -153,6 +155,7 @@ input:focus{box-shadow:0 0 0 2px var(--acc)}
   <header>
     <div class="logo">Mini Jogos</div>
     <div style="display:flex;gap:8px;align-items:center">
+      <button class="loginbtn" id="loginBtn">Entrar</button>
       <div class="coins" title="Seus tokens"><span class="coin"></span><span id="coins">300</span></div>
       <button class="btn" id="helpBtn" aria-label="Como jogar">?</button>
     </div>
@@ -205,6 +208,13 @@ input:focus{box-shadow:0 0 0 2px var(--acc)}
   <div style="height:30px"></div>
 </div>
 <div class="toast" id="toast"></div>
+<div class="modal" id="authModal"><div class="card" style="width:100%">
+  <h2 id="authTitle">Entrar</h2>
+  <p id="authText" style="color:#ccc;margin:0 0 6px"></p>
+  <button id="googleBtn" style="width:100%;font-size:17px">Entrar com Google</button>
+  <button id="logoutBtn" style="width:100%;font-size:17px;background:#333;color:#fff;display:none">Sair da conta</button>
+  <button id="authClose" style="width:100%;background:#333;color:#fff">Fechar</button>
+</div></div>
 <div class="modal" id="catModal"><div class="card" style="width:100%;max-height:85vh;overflow:auto">
   <h2>Escolha a categoria</h2>
   <div class="cgrid" id="catGrid"></div>
@@ -245,7 +255,16 @@ const PACKS = [100,300,500,1000];
 const PRICE_PER_100 = 5; // R$ 5,00 a cada 100 tokens
 const brl = v => "R$ " + v.toFixed(2).replace(".",",");
 try { const t = parseInt(localStorage.getItem("tokens")); if (!isNaN(t) && t >= 0) var savedTokens = t; } catch(e){}
-function saveTokens(){ try { localStorage.setItem("tokens", String(coins)); } catch(e){} }
+// ===== Login com Google (Supabase) =====
+// Preencha com os dados do seu projeto Supabase (Project Settings → API).
+const SUPA_URL = "https://vfgqqrvmfzhcncygzejh.supabase.co";
+const SUPA_KEY = "sb_publishable_PK6UVU5OivZ22wirf2kRnA_rB1viq1R";
+let sb = null, user = null;
+try { if (SUPA_URL && SUPA_KEY && window.supabase) sb = window.supabase.createClient(SUPA_URL, SUPA_KEY); } catch(e){}
+function saveTokens(){
+  try { localStorage.setItem("tokens", String(coins)); } catch(e){}
+  if (sb && user) sb.from("perfis").update({tokens: coins, atualizado: new Date().toISOString()}).eq("id", user.id).then(()=>{});
+}
 let randomMode = false, cat = "Marcas de Luxo", list = [], ansIdx = 0, guesses = [], coins = (typeof savedTokens === 'number' ? savedTokens : 300), done = false, revealed = new Set();
 
 function sortedList(name){
@@ -341,6 +360,37 @@ $("hint").onclick = ()=>{
 };
 $("helpBtn").onclick = ()=>$("modal").classList.add("show");
 $("closeModal").onclick = ()=>$("modal").classList.remove("show");
+function userName(){ const m = (user && user.user_metadata) || {}; return (m.full_name || m.name || (user && user.email) || "Jogador").split(" ")[0]; }
+function renderAuth(){ $("loginBtn").textContent = user ? "👤 " + userName() : "Entrar"; }
+async function loadProfile(u){
+  user = u;
+  try {
+    const r = await sb.from("perfis").select("tokens").eq("id", u.id).maybeSingle();
+    if (r.data) coins = r.data.tokens;
+    else await sb.from("perfis").insert({id: u.id, tokens: coins});
+    try { localStorage.setItem("tokens", String(coins)); } catch(e){}
+  } catch(e){ toast("Não foi possível carregar sua conta"); }
+  renderAuth(); render();
+}
+if (sb){
+  sb.auth.getSession().then(r=>{ if (r.data && r.data.session) setTimeout(()=>loadProfile(r.data.session.user),0); });
+  sb.auth.onAuthStateChange((ev, sess)=>{
+    if (ev === "SIGNED_IN" && sess && (!user || user.id !== sess.user.id)) setTimeout(()=>loadProfile(sess.user),0);
+    if (ev === "SIGNED_OUT"){ user = null; renderAuth(); }
+  });
+}
+function openAuth(){
+  const logged = !!user;
+  $("authTitle").textContent = logged ? "Sua conta" : "Entrar";
+  $("authText").textContent = !sb ? "O login ainda não está configurado neste site." : logged ? "Conectado como " + (user.email || userName()) + ". Seus tokens ficam salvos na conta." : "Entre com o Google para guardar seus tokens e voltar a jogar de qualquer aparelho.";
+  $("googleBtn").style.display = (!sb || logged) ? "none" : "block";
+  $("logoutBtn").style.display = logged ? "block" : "none";
+  $("authModal").classList.add("show");
+}
+$("loginBtn").onclick = openAuth;
+$("authClose").onclick = ()=>$("authModal").classList.remove("show");
+$("googleBtn").onclick = ()=>{ sb.auth.signInWithOAuth({provider:"google", options:{redirectTo: location.origin + location.pathname}}); };
+$("logoutBtn").onclick = async ()=>{ await sb.auth.signOut(); user = null; renderAuth(); $("authModal").classList.remove("show"); toast("Você saiu da conta"); };
 function buildPicker(){
   const g = $("catGrid"); g.innerHTML = "";
   const r = document.createElement("button");
